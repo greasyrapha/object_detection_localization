@@ -18,7 +18,7 @@ from utils.torch_utils import select_device, time_sync
 from utils.augmentations import letterbox
 from models.experimental import attempt_load
 from cv_bridge import CvBridge, CvBridgeError
-import pyrealsense2 as rs2
+#import pyrealsense2 as rs2
 from pathlib import Path
 sys.path.remove('/opt/ros/melodic/lib/python2.7/dist-packages')
 
@@ -27,6 +27,7 @@ class Detector:
         self.bridge = CvBridge()
         self.subcolor = rospy.Subscriber(color_image_topic, Image, self.imageColorCallback, queue_size=1, buff_size=52428800)
         self.subdepth = rospy.Subscriber(depth_image_topic, Image, self.imageDepthCallback, queue_size=1, buff_size=52428800)
+        self.pubresult = rospy.Publisher('/detection_result_image', Image, queue_size=1)
 
     def imageColorCallback(self, colordata):
         callback_colorimage = self.bridge.imgmsg_to_cv2(colordata, colordata.encoding)
@@ -105,10 +106,9 @@ class Detector:
                     annotator.box_label(xyxy, label, color=colors(c, True))
                     print(f'{s}{self.distance_cm:.2f}cm')
 
-                #print(f'{s}Done. {1/(t3 - t2):.3f}fps')
-
         cv2.imshow('Detection', im0)
         cv2.waitKey(1)
+        self.pubresult.publish(self.bridge.cv2_to_imgmsg(im0, encoding="bgr8"))
 
 def main():
     color_image_topic = '/camera/color/image_raw'
