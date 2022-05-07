@@ -7,7 +7,7 @@ yolov5 v6.0
 ```
 $ cd ~/catkin_ws/src
 $ git clone https://github.com/greasyrapha/capstone_detection
-$ catkin_make
+$ cd .. && catkin_make
 $ catkin_make install
 $ roslaunch realsense2_camera rs_camera.launch
 $ rosrun detection detection.py
