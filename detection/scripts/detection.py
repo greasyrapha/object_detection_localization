@@ -45,8 +45,7 @@ class Detector:
 
         self.camerapose = [0, 0, 0] #realsense pose for transform
 
-        self.opt_points = np.array([["x", "y"]])
-        self.det_points = np.array([["name", "x", "y"]])
+        self.det_points = np.array([["name", "x", "y", "n"]])
 
         self.pipeline = rs.pipeline()
         self.config = rs.config()
@@ -57,11 +56,7 @@ class Detector:
         self.subpose = rospy.Subscriber('/slam_out_pose', PoseStamped, self.poseCallback, queue_size=1)
 
 #        self.pubresult = rospy.Publisher('/detection_result_image', Image, queue_size=1)
-#        self.pubdetmarker = rospy.Publisher("/det_marker", Marker, queue_size=1)
         self.puboptmarker = rospy.Publisher("/opt_marker", Marker, queue_size=1) 
-
-#        self.init_det_marker()
-        self.init_opt_marker()
 
         self.file = open(osp.join(ROOT, 'catkin_ws/src/detection/scripts/output/output.txt'), 'w')
 
@@ -76,16 +71,6 @@ class Detector:
                               (self.orientation[0], self.orientation[1], self.orientation[2], self.orientation[3]), 
                                rospy.Time.now(), "realsense", "map")
 
-#    def init_det_marker(self):
-#        self.det_marker = Marker()
-#        self.det_marker.header.frame_id = "/map"
-#        self.det_marker.ns = "det_marker"
-#        self.det_marker.id = 0
-#        self.det_marker.type = Marker.POINTS
-#        self.det_marker.action = Marker.ADD
-#        self.det_marker.color = ColorRGBA(1, 0, 0, 1)
-#        self.det_marker.scale = Vector3(0.2, 0.2, 0)
-
     def init_opt_marker(self):
         self.opt_marker = Marker()
         self.opt_marker.header.frame_id = "/map"
@@ -95,9 +80,6 @@ class Detector:
         self.opt_marker.action = Marker.ADD
         self.opt_marker.color = ColorRGBA(0, 0, 1, 1)
         self.opt_marker.scale = Vector3(0.2, 0.2, 0)
-
-#    def draw_det_marker(self, x, y):
-#        self.det_marker.points.append(Point(x, y, 0))
 
     def draw_opt_marker(self, x, y):
         self.opt_marker.points.append(Point(x, y, 0))
@@ -159,6 +141,12 @@ class Detector:
         dist = 0
         sumx = 0
         sumy = 0
+        
+        self.init_opt_marker()
+
+        if self.det_points.shape[0] > 1:
+            for i in range(1, self.det_points.shape[0]):
+                self.draw_opt_marker(float(self.det_points[i, 1:][0]), float(self.det_points[i, 1:][1]))
 
         for i, det in enumerate(pred):
             p, s, im0, frame = dataset[0], '', im0s.copy(), getattr(dataset, 'frame', 0)
@@ -204,19 +192,23 @@ class Detector:
                                 dist = math.sqrt(pow(w_x, 2) + pow(w_y, 2))
                                 if dist >= 0.4: #dist_threshold
                                     knn_score += 1
-                                elif dist < 1:
+                                elif dist < 0.4 and dist >= 0.1:
+                                    self.det_points[i, 1:][2] = int(self.det_points[i, 1:][2]) + 1
+                                    self.det_points[i, 1:][0] = (float(self.det_points[i, 1:][0]) + posgx) / 2.0
+                                    #self.det_points[i, 1:][0] = (float(self.det_points[i, 1:][0]) + posgx) / float(self.det_points[i, 1:][2])
+                                    self.det_points[i, 1:][1] = (float(self.det_points[i, 1:][1]) + posgy) / 2.0
+                                    #self.det_points[i, 1:][1] = (float(self.det_points[i, 1:][1]) + posgy) / float(self.det_points[i, 1:][2])
+                                    knn_rst = 0
+                                elif dist < 0.1:
                                     knn_rst = 0
                             if knn_score * knn_rst != 0:
-                                self.det_points = np.append(self.det_points, [[names[c], posgx, posgy]], axis=0) #add det_points
-                                self.draw_opt_marker(posgx, posgy)
+                                self.det_points = np.append(self.det_points, [[names[c], posgx, posgy, 1]], axis=0) #add det_points
                         elif n_class == 0:
-                            self.det_points = np.append(self.det_points, [[names[c], posgx, posgy]], axis=0) #add det_points
-                            self.draw_opt_marker(posgx, posgy)
+                            self.det_points = np.append(self.det_points, [[names[c], posgx, posgy, 1]], axis=0) #add det_points
                    
         cv2.imshow('Detection', im0)
         cv2.waitKey(1)
 
-#        self.pubdetmarker.publish(self.det_marker)
         self.puboptmarker.publish(self.opt_marker)
 #        self.pubresult.publish(self.bridge.cv2_to_imgmsg(im0, encoding="bgr8"))
         self.file.write('====================================' + '\n')
