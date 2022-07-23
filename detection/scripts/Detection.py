@@ -130,7 +130,7 @@ if __name__ == "__main__":
     set_logging()
     device = ''
     device = select_device(device)
-    weights = osp.join(ROOT, 'catkin_ws/src/detection/scripts/yolov5s.pt')
+    weights = osp.join(ROOT, 'catkin_ws/src/detection/scripts/weights/yolov5s.pt')
     imgsz = 640
     model = attempt_load(weights, map_location=device)
 
