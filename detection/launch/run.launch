@@ -1,4 +1,4 @@
 <launch>
     <node pkg="detection" type="Detection.py" name="Detection_node"/>
-    <node pkg="detection" type="Visualization.py" name="Visualization_node"/>
+    <node pkg="detection" type="Localization.py" name="Localization_node"/>
 </launch>
