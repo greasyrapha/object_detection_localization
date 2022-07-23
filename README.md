@@ -9,6 +9,5 @@ $ cd ~/catkin_ws/src
 $ git clone https://github.com/greasyrapha/capstone_detection
 $ cd .. && catkin_make
 $ catkin_make install
-$ roscore
-$ rosrun detection detection.py
+$ roslaunch detection run.launch
 ```
