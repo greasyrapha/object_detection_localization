@@ -28,7 +28,7 @@ class Localization:
 
         self.camerapose = [0, 0, 0] #realsense pose for transform
 
-        self.det_points = np.array([["name", "x", "y", "n"]])
+        self.det_points = np.array([["class_id", "class_name", "x", "y", "sumx", "sumy", "num"]])
 
         self.subpose = rospy.Subscriber('/slam_out_pose', PoseStamped, self.poseCallback, queue_size=1)
         self.subobject = rospy.Subscriber('/det_out_obj', Object, self.objectCallback, queue_size=1)
@@ -86,7 +86,9 @@ class Localization:
 
         if self.det_points.shape[0] > 1:
             for i in range(1, self.det_points.shape[0]):
-                self.draw_marker(float(self.det_points[i, 1:][0]), float(self.det_points[i, 1:][1]))
+                self.draw_marker(float(self.det_points[i, 1:][1]), float(self.det_points[i, 1:][2]))
+        print(self.det_points)
+        print('=========================' + '\n')
 
         d_dist = self.posx + self.posy + self.posz
 
@@ -107,24 +109,24 @@ class Localization:
 
             if n_class > 0:
                 for i in w_class:
-                    w_x = abs(posgx - float(self.det_points[i, 1:][0])) # x
-                    w_y = abs(posgy - float(self.det_points[i, 1:][1])) # y
+                    w_x = abs(posgx - float(self.det_points[i, 1:][1])) # x
+                    w_y = abs(posgy - float(self.det_points[i, 1:][2])) # y
                     dist = math.sqrt(pow(w_x, 2) + pow(w_y, 2))
                     if dist >= dist_threshold:
                         knn_score += 1
-                    elif dist < dist_threshold and dist >= 0.1:
-                        self.det_points[i, 1:][2] = int(self.det_points[i, 1:][2]) + 1
-                        self.det_points[i, 1:][0] = (float(self.det_points[i, 1:][0]) + posgx) / 2.0
-                        #self.det_points[i, 1:][0] = (float(self.det_points[i, 1:][0]) + posgx) / float(self.det_points[i, 1:][2])
-                        self.det_points[i, 1:][1] = (float(self.det_points[i, 1:][1]) + posgy) / 2.0
-                        #self.det_points[i, 1:][1] = (float(self.det_points[i, 1:][1]) + posgy) / float(self.det_points[i, 1:][2])
+                    elif dist < dist_threshold and dist >= 0.05:
+                        self.det_points[i, 1:][5] = int(self.det_points[i, 1:][5]) + 1
+                        self.det_points[i, 1:][3] = float(self.det_points[i, 1:][3]) + float(posgx)
+                        self.det_points[i, 1:][4] = float(self.det_points[i, 1:][4]) + float(posgy)
+                        self.det_points[i, 1:][1] = float(self.det_points[i, 1:][3]) / float(self.det_points[i, 1:][5])
+                        self.det_points[i, 1:][2] = float(self.det_points[i, 1:][4]) / float(self.det_points[i, 1:][5])
                         knn_rst = 0
                     elif dist < 0.1:
                         knn_rst = 0
                 if knn_score * knn_rst != 0:
-                    self.det_points = np.append(self.det_points, [[self.class_name, posgx, posgy, 1]], axis=0) #add det_points
+                    self.det_points = np.append(self.det_points, [[self.det_points.shape[0] - 1, self.class_name, posgx, posgy, posgx, posgy, 1]], axis=0) #add det_points
             elif n_class == 0:
-                self.det_points = np.append(self.det_points, [[self.class_name, posgx, posgy, 1]], axis=0) #add det_points
+                self.det_points = np.append(self.det_points, [[self.det_points.shape[0] - 1, self.class_name, posgx, posgy, posgx, posgy, 1]], axis=0) #add det_points
 
         self.puboptmarker.publish(self.marker)
         #self.file.write('====================================' + '\n')
