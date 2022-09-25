@@ -1,5 +1,12 @@
 # Object detection and localization in ROS melodic
+![system](https://user-images.githubusercontent.com/99736012/192159479-c78523a6-8d31-42b7-965c-67cccc4a2bd2.png)
+![3d_localization](https://user-images.githubusercontent.com/99736012/192159690-968f0414-d5d5-4087-9f47-a581bdcaba1c.png)
 
+
+We using   
+Intel Realsense Depth Camera D455 for Object detection and localization in local coordinate system   
+RPlidar A3 for 2D L-SLAM   
+Velodyne VLP-16 3D L-SLAM
 # Installation
 Dependencies
 ```
