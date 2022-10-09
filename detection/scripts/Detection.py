@@ -38,7 +38,7 @@ class Detector:
         ##Tested in Intel Realsense D455
         self.stream_width = 640
         self.stream_height = 480
-        self.stream_fps = 30
+        self.stream_fps = 10 # Default = 30
 
         ##Create pipeline
         self.pipeline = rs.pipeline()
@@ -132,6 +132,7 @@ class Detector:
                     annotator.box_label(xyxy, label, color=colors(c, True))
                     cv2.putText(im0, str(d_point_ros), (posx, posy + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 2)
                     self.setObject(d_point_ros[0], d_point_ros[1], d_point_ros[2], names[c])
+                    
                     self.pubobj.publish(self.obj)
                    
         cv2.imshow('Detection', im0)
