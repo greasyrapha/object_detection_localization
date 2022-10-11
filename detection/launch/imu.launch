@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<launch>
+    <node pkg="detection" type="imu_node.py" name="IMU_Node"/>
+    <node pkg="imu_complementary_filter" type="complementary_filter_node" name="complementary_filter_gain_node"/>
+</launch>
